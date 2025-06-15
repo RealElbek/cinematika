@@ -10,6 +10,8 @@ import '../../domain/entities/movie_detail_entity.dart';
 import '../../domain/entities/trailer_entity.dart';
 import '../../domain/entities/review_entity.dart';
 import '../manager/movie_detail_bloc.dart';
+import '../manager/movie_detail_event.dart';
+import '../manager/movie_detail_state.dart';
 import '../widgets/actor_item_widget.dart';
 import '../widgets/comment_widget.dart';
 import '../widgets/custom_icon_button.dart';

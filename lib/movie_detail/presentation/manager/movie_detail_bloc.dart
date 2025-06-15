@@ -7,50 +7,8 @@ import '../../domain/use_cases/get_movie_details.dart';
 import '../../domain/use_cases/get_movie_trailers.dart';
 import '../../domain/use_cases/get_movie_reviews.dart';
 import '../../domain/use_cases/get_tv_details.dart';
-
-// Events
-abstract class MovieDetailEvent {}
-
-class FetchMovieDetails extends MovieDetailEvent {
-  final int movieId;
-
-  FetchMovieDetails(this.movieId);
-}
-
-class FetchTvDetails extends MovieDetailEvent {
-  final int tvId;
-
-  FetchTvDetails(this.tvId);
-}
-
-// States
-abstract class MovieDetailState {}
-
-class MovieDetailInitial extends MovieDetailState {}
-
-class MovieDetailLoading extends MovieDetailState {}
-
-class MovieDetailLoaded extends MovieDetailState {
-  final MovieDetailEntity? movie;
-  final TvDetailEntity? tv;
-  final List<TrailerEntity> trailers;
-  final List<ReviewEntity> reviews;
-
-  MovieDetailLoaded({
-    this.movie,
-    this.tv,
-    required this.trailers,
-    required this.reviews,
-  });
-}
-
-class MovieDetailError extends MovieDetailState {
-  final String message;
-
-  MovieDetailError(this.message);
-}
-
-// BLoC
+import 'movie_detail_event.dart';
+import 'movie_detail_state.dart';
 class MovieDetailBloc extends Bloc<MovieDetailEvent, MovieDetailState> {
   final GetMovieDetails _getMovieDetails;
   final GetMovieTrailers _getMovieTrailers;

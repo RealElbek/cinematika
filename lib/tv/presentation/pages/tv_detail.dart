@@ -10,6 +10,8 @@ import '../../../movie_detail/domain/entities/review_entity.dart';
 import '../../../movie_detail/domain/entities/trailer_entity.dart';
 import '../../../movie_detail/domain/entities/tv_detail_entity.dart';
 import '../../../movie_detail/presentation/manager/movie_detail_bloc.dart';
+import '../../../movie_detail/presentation/manager/movie_detail_event.dart';
+import '../../../movie_detail/presentation/manager/movie_detail_state.dart';
 import '../../../movie_detail/presentation/widgets/actor_item_widget.dart';
 import '../../../movie_detail/presentation/widgets/comment_widget.dart';
 import '../../../movie_detail/presentation/widgets/custom_icon_button.dart';

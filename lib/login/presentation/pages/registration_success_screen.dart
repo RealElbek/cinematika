@@ -16,7 +16,6 @@ class RegistrationSuccessScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Success icon (SVG from assets)
               SvgPicture.asset(
                 'assets/login/images/success_icon.svg',
                 width: 120,

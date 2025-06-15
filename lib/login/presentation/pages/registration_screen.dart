@@ -5,6 +5,8 @@ import '../../../core/routes/routes.dart';
 import '../../../core/themes/colors.dart';
 import '../../domain/entities/user_entity.dart';
 import '../manager/auth_bloc.dart';
+import '../manager/auth_event.dart';
+import '../manager/auth_state.dart';
 import '../widgets/auth_input_field.dart';
 import '../widgets/error_modal.dart';
 
@@ -19,12 +21,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-  bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
+  final ValueNotifier<bool> _isRegisterEnabled = ValueNotifier<bool>(false);
   final FocusNode _emailFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
   final FocusNode _confirmPasswordFocusNode = FocusNode();
-  bool _isLoading = false; // New loading state
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   @override
   void initState() {
@@ -42,11 +44,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
     _confirmPasswordFocusNode.dispose();
+    _isRegisterEnabled.dispose();
     super.dispose();
   }
 
   void _updateButtonState() {
-    setState(() {});
+    _isRegisterEnabled.value = _emailController.text.isNotEmpty &&
+        _passwordController.text.isNotEmpty &&
+        _confirmPasswordController.text.isNotEmpty;
   }
 
   void _togglePasswordVisibility() {
@@ -59,12 +64,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     setState(() {
       _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
     });
-  }
-
-  bool get _isRegisterEnabled {
-    return _emailController.text.isNotEmpty &&
-        _passwordController.text.isNotEmpty &&
-        _confirmPasswordController.text.isNotEmpty;
   }
 
   void _handleRegistration() {
@@ -80,10 +79,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
-
     final user = UserEntity(
       email: _emailController.text,
       password: _passwordController.text,
@@ -98,11 +93,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         leading: IconButton(
-          icon: SvgPicture.asset(
+          icon:  SvgPicture.asset(
             'assets/icons/exit.svg',
             width: 24,
             height: 24,
-            color: const Color(0xFF2AB156),
+            color: Color(0xFF2AB156),
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -118,29 +113,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthLoading) {
-            setState(() {
-              _isLoading = true;
-            });
-          } else if (state is AuthSuccess) {
-            setState(() {
-              _isLoading = false;
-            });
+          if (state is AuthSuccess) {
             Navigator.pushReplacementNamed(context, AppRoutes.main);
-          } else if (state is AuthError) {
-            setState(() {
-              _isLoading = false;
-            });
-            if (!state.message.contains('successfully')) {
-              showDialog(
-                context: context,
-                builder: (context) => ErrorModal(
-                  errorMessage: state.message,
-                  onPressed: () => Navigator.pop(context),
-                  svgAssetPath: 'assets/icons/error_icon.svg',
-                ),
-              );
-            }
+          } else if (state is AuthError && !state.message.contains('successfully')) {
+            showDialog(
+              context: context,
+              builder: (context) => ErrorModal(
+                errorMessage: state.message,
+                onPressed: () => Navigator.pop(context),
+                svgAssetPath: 'assets/icons/error_icon.svg',
+              ),
+            );
           }
         },
         child: SafeArea(
@@ -177,27 +160,24 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 onToggleVisibility: _toggleConfirmPasswordVisibility,
                 topMargin: 16,
               ),
-              Padding(
-                padding: const EdgeInsets.only(top: 26),
+              const Padding(
+                padding: EdgeInsets.only(top: 26),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    RichText(
-                      text: TextSpan(
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                        ),
-                        children: [
-                          const TextSpan(text: 'By registering you agree to the '),
-                          TextSpan(
-                            text: 'terms of use',
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                    Text(
+                      'By registering you agree to the ',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                      ),
+                    ),
+                    Text(
+                      'terms of use',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -206,44 +186,54 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               const Spacer(),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                child: Column(
-                  children: [
-                    Visibility(
-                      visible: !_isLoading,
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _isRegisterEnabled ? _handleRegistration : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            disabledBackgroundColor: const Color(0x802BB157),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Register',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                            ),
+                child: BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, state) {
+                    final isLoading = state is AuthLoading;
+                    return Column(
+                      children: [
+                        Visibility(
+                          visible: !isLoading,
+                          child: ValueListenableBuilder<bool>(
+                            valueListenable: _isRegisterEnabled,
+                            builder: (context, isEnabled, _) {
+                              return SizedBox(
+                                width: double.infinity,
+                                height: 50,
+                                child: ElevatedButton(
+                                  onPressed: isEnabled ? _handleRegistration : null,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    disabledBackgroundColor: const Color(0x802BB157),
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Register',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
-                      ),
-                    ),
-                    if (_isLoading)
-                      Center(
-                        child: const Padding(
-                          padding: EdgeInsets.only(top: 10),
-                          child: CircularProgressIndicator(
-                            color: AppColors.primary,
+                        if (isLoading)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 10),
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                  ],
+                      ],
+                    );
+                  },
                 ),
               ),
             ],

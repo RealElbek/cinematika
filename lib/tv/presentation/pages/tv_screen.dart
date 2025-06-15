@@ -4,6 +4,8 @@ import '../../../core/locator.dart';
 import '../../../home/presentation/pages/search_screen.dart';
 import '../../domain/entities/tv_entity.dart';
 import '../manager/tv_bloc.dart';
+import '../manager/tv_event.dart';
+import '../manager/tv_state.dart';
 import '../widgets/tv_card.dart';
 import '../widgets/tv_section.dart';
 import '../../../core/utils/genre_utils.dart';

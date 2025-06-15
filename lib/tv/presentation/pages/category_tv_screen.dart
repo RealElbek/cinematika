@@ -8,6 +8,8 @@ import '../../../core/utils/genre_utils.dart';
 import '../../../home/presentation/pages/filter_screen.dart';
 import '../../../home/presentation/pages/search_screen.dart';
 import '../manager/tv_bloc.dart';
+import '../manager/tv_event.dart';
+import '../manager/tv_state.dart';
 import '../widgets/category_tv_card.dart';
 
 class CategoryTvScreen extends StatelessWidget {

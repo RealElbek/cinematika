@@ -37,16 +37,15 @@ final GetIt getIt = GetIt.instance;
 
 void setupLocator() {
   try {
-    // Register a single Dio instance with TMDB configuration
     getIt.registerLazySingleton<Dio>(() {
       final dio = Dio();
       dio.options.baseUrl = 'https://api.themoviedb.org/3';
       dio.options.queryParameters = {'api_key': 'fab3626d9e8d767dbf679f3c64849db5'};
-      dio.interceptors.add(LogInterceptor(responseBody: true)); // Optional: Add logging for debugging
+      dio.interceptors.add(LogInterceptor(responseBody: true));
       return dio;
     });
 
-    // Add AuthBloc registration
+
     getIt.registerFactory<AuthBloc>(
           () => AuthBloc(
         getIt<RegisterUserUseCase>(),
@@ -108,7 +107,7 @@ void setupLocator() {
           () => CheckRegistrationUseCase(getIt<AuthRepository>()),
     );
   } catch (e) {
-    // Handle dependency injection errors (e.g., log or throw)
+
     throw Exception('Failed to setup locator: $e');
   }
 

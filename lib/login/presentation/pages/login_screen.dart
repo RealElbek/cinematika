@@ -5,6 +5,8 @@ import '../../../core/routes/routes.dart';
 import '../../../core/themes/colors.dart';
 import '../../domain/entities/user_entity.dart';
 import '../manager/auth_bloc.dart';
+import '../manager/auth_event.dart';
+import '../manager/auth_state.dart';
 import '../widgets/error_modal.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -17,10 +19,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _isPasswordVisible = false;
+  final ValueNotifier<bool> _isLoginEnabled = ValueNotifier<bool>(false);
   final FocusNode _emailFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
-  bool _isLoading = false;
+  bool _isPasswordVisible = false;
 
   @override
   void initState() {
@@ -35,11 +37,13 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
+    _isLoginEnabled.dispose();
     super.dispose();
   }
 
   void _updateButtonState() {
-    setState(() {});
+    _isLoginEnabled.value =
+        _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
   }
 
   void _togglePasswordVisibility() {
@@ -48,15 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  bool get _isLoginEnabled {
-    return _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
-  }
-
   void _handleLogin() {
-    setState(() {
-      _isLoading = true;
-    });
-
     final user = UserEntity(
       email: _emailController.text,
       password: _passwordController.text,
@@ -70,19 +66,9 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.black,
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthLoading) {
-            setState(() {
-              _isLoading = true;
-            });
-          } else if (state is AuthSuccess) {
-            setState(() {
-              _isLoading = false;
-            });
+          if (state is AuthSuccess) {
             Navigator.pushReplacementNamed(context, AppRoutes.main);
           } else if (state is AuthError) {
-            setState(() {
-              _isLoading = false;
-            });
             showDialog(
               context: context,
               builder: (context) => ErrorModal(
@@ -103,21 +89,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: SvgPicture.asset(
+                      onTap: () => Navigator.pop(context),
+                      child:  SvgPicture.asset(
                         'assets/icons/exit.svg',
                         width: 24,
                         height: 24,
-                        color: const Color(0xFF2AB156),
+                        color: Color(0xFF2AB156),
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Text(
+                    const Text(
                       'Login',
                       style: TextStyle(
-                        color: const Color(0xFF2AB156),
+                        color: Color(0xFF2AB156),
                         fontSize: 34,
                         fontWeight: FontWeight.bold,
                         height: 1.2,
@@ -145,9 +129,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 isPasswordVisible: _isPasswordVisible,
                 onToggleVisibility: _togglePasswordVisibility,
               ),
-              Center(
+              const Center(
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 16),
+                  padding: EdgeInsets.only(top: 16),
                   child: Text(
                     'Forgot password?',
                     style: TextStyle(
@@ -160,44 +144,56 @@ class _LoginScreenState extends State<LoginScreen> {
               const Spacer(),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    Visibility(
-                      visible: !_isLoading,
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _isLoginEnabled ? _handleLogin : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            disabledBackgroundColor: const Color(0x802BB157),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                            ),
+                child: BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, state) {
+                    final isLoading = state is AuthLoading;
+                    return Column(
+                      children: [
+                        Visibility(
+                          visible: !isLoading,
+                          child: ValueListenableBuilder<bool>(
+                            valueListenable: _isLoginEnabled,
+                            builder: (context, isEnabled, _) {
+                              return SizedBox(
+                                width: double.infinity,
+                                height: 50,
+                                child: ElevatedButton(
+                                  onPressed: isEnabled ? _handleLogin : null,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    disabledBackgroundColor:
+                                    const Color(0x802BB157),
+                                    padding:
+                                    const EdgeInsets.symmetric(vertical: 10),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Login',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
-                      ),
-                    ),
-                    if (_isLoading)
-                      Center(
-                        child: const Padding(
-                          padding: EdgeInsets.only(top: 10),
-                          child: CircularProgressIndicator(
-                            color: AppColors.primary,
+                        if (isLoading)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 10),
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                  ],
+                      ],
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 20),
@@ -269,27 +265,26 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                if (hasCursor)
-                  if (isPassword)
-                    Positioned(
-                      right: 16,
-                      top: 0,
-                      bottom: 0,
-                      child: Center(
-                        child: IconButton(
-                          icon: Icon(
-                            isPasswordVisible
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            color: const Color(0xFF8E8E93),
-                            size: 24,
-                          ),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          onPressed: onToggleVisibility,
+                if (hasCursor && isPassword)
+                  Positioned(
+                    right: 16,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: IconButton(
+                        icon: Icon(
+                          isPasswordVisible
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: const Color(0xFF8E8E93),
+                          size: 24,
                         ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: onToggleVisibility,
                       ),
                     ),
+                  ),
               ],
             ),
           ),

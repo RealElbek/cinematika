@@ -1,19 +1,12 @@
-import 'package:cinematika/favorites/presentation/pages/FavoritesScreen.dart';
-import 'package:cinematika/profile/presentation/pages/profile_screen.dart';
-import 'package:cinematika/tv/presentation/pages/tv_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/locator.dart';
 import 'core/routes/router.dart';
 import 'core/routes/routes.dart';
 import 'core/themes/colors.dart';
-import 'home/presentation/pages/home_screen.dart';
 import 'login/presentation/manager/auth_bloc.dart';
-import 'home/presentation/manager/home/home_bloc.dart';
 import 'home/presentation/manager/search/search_bloc.dart';
-import 'movie_detail/presentation/pages/movie_detail.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,12 +30,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appRouter = AppRouter();
-
     return MultiBlocProvider(
       providers: [
-        // BlocProvider<AuthBloc>(create: (context) => getIt<AuthBloc>()),
-        // BlocProvider<HomeBloc>(create: (context) => getIt<HomeBloc>()),
-        // BlocProvider<SearchBloc>(create: (context) => getIt<SearchBloc>()),
+        BlocProvider<AuthBloc>(create: (context) => getIt<AuthBloc>()),
+        BlocProvider<SearchBloc>(create: (context) => getIt<SearchBloc>()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -56,7 +47,6 @@ class MyApp extends StatelessWidget {
               foregroundColor: Colors.white,
             ),
           ),
-          // Additional theme customizations (optional)
           textTheme: ThemeData.dark().textTheme.apply(
             bodyColor: Colors.white,
             displayColor: Colors.white,
